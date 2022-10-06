@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+
+{% block meta %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.1/dist/css/bootstrap.min.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+<script>
+  function updateTable(){
+    // clear table
+    var itemCount = $(".table > tbody").children().length;
+    for(var i = itemCount; i >= 2; i--){ // remove dara dari 2, karena 1 uuntuk header
+      $(".table > tbody > tr:nth-child(" + i + ")").remove();
+    }
+
+    $.get("http://localhost:8000/wishlist/json/", function(data) {
+      // fill table dr json
+      for(var i = 0; i < data.length; i++){
+        // buat row
+        var tr = document.createElement("tr");
+        
+        // buat cell
+        var cellNama = document.createElement("td");
+        var cellHarga = document.createElement("td");
+        var cellDeskripsi = document.createElement("td");
+
+        // append data ke cell
+        cellNama.append(data[i].fields.nama_barang);
+        cellHarga.append(data[i].fields.harga_barang);
+        cellDeskripsi.append(data[i].fields.deskripsi);
+        
+        // append cell ke row
+        tr.append(cellNama);
+        tr.append(cellHarga);
+        tr.append(cellDeskripsi);
+        
+        // add ke tabel
+        $(".table").append(tr);
+      }
+    });
+  }
+  
+  $(document).ready(function(){
+    updateTable();
+    
+    // untuk add wishlist
+    $("#add_wishlist").click(function(){
+      // get value nama harga desc
+      var nama = $("#id_nama").val();
+      var harga = $("#id_harga").val();
+      var deskripsi = $("#id_deskripsi").val();
+
+      
+      $.post("http://localhost:8000/wishlist/ajax/submit/", // post data dengan routing
+      // trus ke database
+      {
+        nama,
+        harga,
+        deskripsi,
+      },
+      function(data, status){
+        console.log("add wishlist success");
+        // update ulang table
+        updateTable();
+        // set form kosong
+        $("#id_nama").val("");
+        $("#id_harga").val("");
+        $("#id_deskripsi").val("");
+      });
+    });
+  });
+</script>
+
+{% endblock meta %}
+
+{% block content %}
+{% include 'navbar.html' %}
+
+<div class="p-4">
+    <h5>Nama: </h5>
+    <b>{{nama}}</b>
+    <br>
+    <br>
+    <br>
+    <table class="table table-bordered">
+        <tr>
+        <th>Nama Barang</th>
+        <th>Harga Barang</th>
+        <th>Deskripsi</th>
+        </tr>
+        
+    </table>
+    <h5>Sesi terakhir login: {{ last_login }}</h5>
+    <h5 class="mt-4">Tambah Barang</h5>
+    <form method="POST" action="">
+        {% csrf_token %}
+        <table>
+        <tr>
+            <td>Nama Barang: </td>
+            <td><input type="text" name="nama_barang" placeholder="Nama Barang" class="form-control" id="id_nama"></td>
+        </tr>
+        <tr>
+            <td>Harga Barang: </td>
+            <td><input type="text" name="harga_barang" placeholder="Harga Barang" class="form-control" id="id_harga"></td>
+        </tr>
+        <tr>
+            <td>Deskripsi: </td>
+            <td><input type="text" name="deskripsi" placeholder="Deskripsi" class="form-control" id="id_deskripsi"></td>
+        </tr>
+        </table>
+        </form>
+        <br>
+        <button id="add_wishlist" class="btn border rounded bg-info">Tambah</button>
+</div>
+
+{% endblock content %}
